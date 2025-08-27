@@ -3,11 +3,9 @@ import os
 
 # Get all CPU information
 cpu_raw = subprocess.run(['lscpu'], stdout=subprocess.PIPE) # cpu_raw is a 'CompletedProcess' object that cannot be accessed using string functions
-# cpu_raw is a 'CompletedProcess' object that cannot be accessed using string functions
 
 # Decode the bytes from the 'CompletedProcess' object to a normal string
 cpu_raw = cpu_raw.stdout.decode('utf-8')
-# Decode the bytes from the 'CompletedProcess' object to a normal string
 
 def thermal_GetCPUTemp():
     thermal_path = '/sys/class/thermal/'
