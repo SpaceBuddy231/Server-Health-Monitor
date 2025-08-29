@@ -39,7 +39,7 @@ def thermal_GetCPUTemp():
         return 'Could not find any thermal_zone'
     try: array_cpu_dir = os.listdir(thermal_cpu_directory)
     except UnboundLocalError: return 'Could not find any thermal_zone'
-    
+
     temperature = None
     # Get temperature from the temp file
     for i in range(len(array_cpu_dir)):
