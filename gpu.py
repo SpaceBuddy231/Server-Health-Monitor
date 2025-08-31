@@ -25,7 +25,7 @@ def thermal_GetGPUTemp():
 
     thermal_gpu_directory = None
 
-     # Check if the directory exists
+    # Check if the directory exists
     if (os.path.isdir(thermal_path)):
         # List all subdirectories of '/sys/class/thermal/' and return them as an array
         array_thermal_dir = os.listdir(thermal_path)
