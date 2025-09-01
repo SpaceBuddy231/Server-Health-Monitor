@@ -3,22 +3,23 @@ import os
 
 
 def GetGPUName():
-    gpu_raw = subprocess.run(['lspci'], stdout=subprocess.PIPE, text=True) # gpu_raw saves some information about the GPU among them is the name of the GPU
+    gpu_raw = subprocess.run(['lspci'], stdout=subprocess.PIPE, text=True)  # gpu_raw saves some information about the GPU among them is the name of the GPU
 
     vga_line = [line for line in gpu_raw.stdout.split('\n')
-                if 'vga' in line.lower()] # This is the vga line that it from the gpu_raw output
+                if 'vga' in line.lower()]  # This is the vga line that it from the gpu_raw output
 
-    potential_gpu_name = ["GeForce", "RTX", "GTX", "TITAN", "Quadro", "Tesla", "NVS", "Radeon", "RX", "HD", "R9", "R7", "R5", "Pro", "FirePro"] # List of potential GPU names that could be listed in the vga line
+    potential_gpu_name = ["GeForce", "RTX", "GTX", "TITAN", "Quadro", "Tesla", "NVS", "Radeon", "RX", "HD", "R9", "R7", "R5", "Pro", "FirePro"]  # List of potential GPU names that could be listed in the vga line
 
-    match = next((name for name in potential_gpu_name if name in vga_line[0]), None) # Find the first matching GPU name from the potential_gpu_name list in the vga_line
+    match = next((name for name in potential_gpu_name if name in vga_line[0]), None)  # Find the first matching GPU name from the potential_gpu_name list in the vga_line
 
-    gpu_name_position = vga_line[0].find(match) # Find the position of the GPU name in the vga_line
+    gpu_name_position = vga_line[0].find(match)  # Find the position of the GPU name in the vga_line
 
-    _gpu_name_plus_trash = [vga_line[0][gpu_name_position:-1].split(']')] # This array contains the GPU name and some trash (not necessery characters after the GPU name)
+    _gpu_name_plus_trash = [vga_line[0][gpu_name_position:-1].split(']')]  # This array contains the GPU name and some trash (not necessery characters after the GPU name)
 
-    gpu_name = _gpu_name_plus_trash[0][0].strip() # This isolates the GPU name from the trash
+    gpu_name = _gpu_name_plus_trash[0][0].strip()  # This isolates the GPU name from the trash
 
     return gpu_name
+
 
 def thermal_GetGPUTemp():
     thermal_path = '/sys/class/thermal/'
@@ -41,17 +42,20 @@ def thermal_GetGPUTemp():
                 with open(directory, 'r') as namefile:
                     content = namefile.read()
                     if any(gputype in content for gputype in ('gpu-thermal', 'GPU-therm', 'g3d-thermal')):
-                            thermal_gpu_directory = os.path.dirname(directory)  # This is the directory that contains all gpu temperature information
-                            if not (os.path.isdir(thermal_gpu_directory)):
-                                return 'The directory defined for "thermal_gpu_directory" is not a directory.'
-                            break
-            except: continue
+                        thermal_gpu_directory = os.path.dirname(directory)  # This is the directory that contains all gpu temperature information
+                        if not (os.path.isdir(thermal_gpu_directory)):
+                            return 'The directory defined for "thermal_gpu_directory" is not a directory.'
+                        break
+            except (FileNotFoundError, OSError):
+                continue
 
     # Get all files and directories in the directory that contains all gpu temperature information
     if thermal_gpu_directory is None:
-        return 'Could not find any thermal_zone'
-    try: array_gpu_dir = os.listdir(thermal_gpu_directory)
-    except UnboundLocalError: return 'Could not find any thermal_zone'
+        return 'Could not find any thermal_zon.'
+    try:
+        array_gpu_dir = os.listdir(thermal_gpu_directory)
+    except UnboundLocalError:
+        return 'Could not find any thermal_zone.'
 
     temperature = None
     # Get temperature from the temp file
@@ -60,9 +64,12 @@ def thermal_GetGPUTemp():
             with open(os.path.join(thermal_gpu_directory, array_gpu_dir[i]), 'r') as namefile:
                 temperature = namefile.read()
 
-    try: temperature = int(temperature.strip())/1000
-    except AttributeError: return 'Could not calculate the temperature (thermal_GetgpuTemp). Temperature string is propably empty.'
+    try:
+        temperature = int(temperature.strip())/1000
+    except AttributeError:
+        return 'Could not calculate the temperature (thermal_GetgpuTemp). Temperature string is propably empty.'
     return int(temperature)
+
 
 def hwmon_GetGPUTemp():
     hwmon_path = '/sys/class/hwmon/'
@@ -114,5 +121,5 @@ def hwmon_GetGPUTemp():
         equation = equation + '+' + str(temperature[i])
         divisor = len(temperature)
 
-    temperature_average = (eval(equation)/divisor)/1000 # Final average temperature value of every sensor
+    temperature_average = (eval(equation)/divisor)/1000  # Final average temperature value of every sensor
     return int(temperature_average)
