@@ -6,57 +6,60 @@ meminfo_raw = '/proc/meminfo'
 class GetRam:
     def __init__(self):
 
-        if not (os.path.isfile(meminfo_raw)):  # Checks if the file that is saved in the 'meminfo_raw' exists -> if not the function resturns a string =>
-            return 'Could not find the memory info in the "/proc/meminfo" path.'
+        try:
+            if not (os.path.isfile(meminfo_raw)):  # Checks if the file that is saved in the 'meminfo_raw' exists -> if not the function resturns a string =>
+                return 'Could not find the memory info in the "/proc/meminfo" path.'
+        finally:
+            pass
 
         content = None
-        # Read the 'meminfo' file and save it into the content var
-        with open(meminfo_raw, 'r') as f:
-            content = f.read()
+        try:
+            # Read the 'meminfo' file and save it into the content var
+            with open(meminfo_raw, 'r') as f:
+                content = f.read()
+        except (FileNotFoundError, OSError):
+            return 'Could not read the "meminfo" file in "/proc/meminfo".'
 
         if not isinstance(content, str) or len(content) < 5:  # If the content could not be defined by the with open() function the system return a string =>
             return 'The "meminfo" file in "/proc/meminfo" is corrupted.'
         self.content = content
 
-    def TotalRam(self):
+    def total_ram(self):
         # Process to get the total RAM
-        MemTotal_Line = ''
-        MemTotal_Line = next((line for line in self.content.splitlines() if 'MemTotal:' in line), None)
-        MemTotal = MemTotal_Line.split(':')[1].strip().split(' ')[0]
-        MemTotal_Result = f'{(int(MemTotal)/1000000):.2f}'
-        print(MemTotal_Result)
+        mem_total_line = ''
+        mem_total_line = next((line for line in self.content.splitlines() if 'MemTotal:' in line), None)
+        mem_total = mem_total_line.split(':')[1].strip().split(' ')[0]
+        mem_total_result = f'{(int(mem_total)/1000000):.2f}'
 
-        return MemTotal_Result
+        return mem_total_result
 
-    def AvailableRam(self):
+    def available_ram(self):
         # Process to get the available RAM
-        MemAvailable_Line = ''
-        MemAvailable_Line = next((line for line in self.content.splitlines() if 'MemAvailable' in line), None)
-        MemAvailable = MemAvailable_Line.split(':')[1].strip().split(' ')[0]
-        MemAvailable_Result = f'{(int(MemAvailable)/1000000):.2f}'
-        print(MemAvailable_Result)
+        mem_available_line = ''
+        mem_available_line = next((line for line in self.content.splitlines() if 'MemAvailable' in line), None)
+        mem_available = mem_available_line.split(':')[1].strip().split(' ')[0]
+        mem_available_result = f'{(int(mem_available)/1000000):.2f}'
 
-        return MemAvailable_Result
+        return mem_available_result
 
-    def UsedRam(self):
+    def used_ram(self):
         # Process to get the used RAM
-        MemUsed = float(self.TotalRam()) - float(self.AvailableRam())
-        MemUsed_Result = f'{(int(MemUsed)):.2f}'
-        print(MemUsed_Result)
+        mem_used = float(self.total_ram()) - float(self.available_ram())
+        mem_used_result = f'{(int(mem_used)):.2f}'
 
-        return MemUsed_Result
+        return mem_used_result
 
 
 ram = GetRam()
 
 
-def TotalRam():
-    return ram.TotalRam()
+def total_ram():
+    return ram.total_ram()
 
 
-def AvailableRam():
-    return ram.AvailableRam()
+def available_ram():
+    return ram.available_ram()
 
 
-def UsedRam():
-    return ram.UsedRam()
+def used_ram():
+    return ram.used_ram()
