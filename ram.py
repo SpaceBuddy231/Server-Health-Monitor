@@ -1,6 +1,7 @@
 import os
 
 meminfo_raw = '/proc/meminfo'
+BYTES_TO_GB = 1_000_000
 
 
 class GetRam:
@@ -29,7 +30,7 @@ class GetRam:
         mem_total_line = ''
         mem_total_line = next((line for line in self.content.splitlines() if 'MemTotal:' in line), None)
         mem_total = mem_total_line.split(':')[1].strip().split(' ')[0]
-        mem_total_result = f'{(int(mem_total)/1000000):.2f}'
+        mem_total_result = f'{(int(mem_total)/BYTES_TO_GB):.2f}'
 
         return mem_total_result
 
@@ -38,7 +39,7 @@ class GetRam:
         mem_available_line = ''
         mem_available_line = next((line for line in self.content.splitlines() if 'MemAvailable' in line), None)
         mem_available = mem_available_line.split(':')[1].strip().split(' ')[0]
-        mem_available_result = f'{(int(mem_available)/1000000):.2f}'
+        mem_available_result = f'{(int(mem_available)/BYTES_TO_GB):.2f}'
 
         return mem_available_result
 
