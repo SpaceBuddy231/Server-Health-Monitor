@@ -12,6 +12,9 @@ def GetGPUName():
 
     match = next((name for name in potential_gpu_name if name in vga_line[0]), None)  # Find the first matching GPU name from the potential_gpu_name list in the vga_line
 
+    if match is None:
+        return 'Could not find any GPU identifier.'
+
     gpu_name_position = vga_line[0].find(match)  # Find the position of the GPU name in the vga_line
 
     _gpu_name_plus_trash = [vga_line[0][gpu_name_position:-1].split(']')]  # This array contains the GPU name and some trash (not necessery characters after the GPU name)
@@ -65,6 +68,8 @@ def thermal_GetGPUTemp():
                 temperature = namefile.read()
 
     try:
+        if temperature is None:
+            return 'The variable "temperature" in gpu.py is not defined.'
         temperature = int(temperature.strip())/1000
     except AttributeError:
         return 'Could not calculate the temperature (thermal_GetgpuTemp). Temperature string is propably empty.'
@@ -73,6 +78,7 @@ def thermal_GetGPUTemp():
 
 def hwmon_GetGPUTemp():
     hwmon_path = '/sys/class/hwmon/'
+    hwmon_gpu_directory = None
 
     if (os.path.isdir(hwmon_path)):
         # List all subdirectories of '/sys/class/hwmon/' and return them as an array
@@ -91,7 +97,10 @@ def hwmon_GetGPUTemp():
                         break
             # If there is no file with a normal gpu indicator the program will try to use the '/sys/class/thermal/' directory as a fallback
             except FileNotFoundError:
-                thermal_GetGPUTemp()
+                continue
+
+    if hwmon_gpu_directory is None:
+        return thermal_GetGPUTemp()
 
     # Get all files and directories in the directory that contains all gpu temperature information
     array_gpu_dir = os.listdir(hwmon_gpu_directory)

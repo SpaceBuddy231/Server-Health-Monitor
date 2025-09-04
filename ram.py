@@ -13,6 +13,7 @@ class GetRam:
         finally:
             pass
 
+    def total_ram(self):
         content = None
         try:
             # Read the 'meminfo' file and save it into the content var
@@ -23,21 +24,33 @@ class GetRam:
 
         if not isinstance(content, str) or len(content) < 5:  # If the content could not be defined by the with open() function the system return a string =>
             return 'The "meminfo" file in "/proc/meminfo" is corrupted.'
-        self.content = content
-
-    def total_ram(self):
         # Process to get the total RAM
         mem_total_line = ''
-        mem_total_line = next((line for line in self.content.splitlines() if 'MemTotal:' in line), None)
+        mem_total_line = next((line for line in content.splitlines() if 'MemTotal:' in line), None)
+        if mem_total_line is None:
+            return 'The "MemTotal" line is missing in the /proc/meminfo/ file.'
         mem_total = mem_total_line.split(':')[1].strip().split(' ')[0]
         mem_total_result = f'{(int(mem_total)/BYTES_TO_GB):.2f}'
 
         return mem_total_result
 
     def available_ram(self):
+        content = None
+        try:
+            # Read the 'meminfo' file and save it into the content var
+            with open(meminfo_raw, 'r') as f:
+                content = f.read()
+        except (FileNotFoundError, OSError):
+            return 'Could not read the "meminfo" file in "/proc/meminfo".'
+
+        if not isinstance(content, str) or len(content) < 5:  # If the content could not be defined by the with open() function the system return a string =>
+            return 'The "meminfo" file in "/proc/meminfo" is corrupted.'
+
         # Process to get the available RAM
         mem_available_line = ''
-        mem_available_line = next((line for line in self.content.splitlines() if 'MemAvailable' in line), None)
+        mem_available_line = next((line for line in content.splitlines() if 'MemAvailable' in line), None)
+        if mem_available_line is None:
+            return 'The "MemAvailable" line is missing in the /proc/meminfo/ file.'
         mem_available = mem_available_line.split(':')[1].strip().split(' ')[0]
         mem_available_result = f'{(int(mem_available)/BYTES_TO_GB):.2f}'
 
@@ -46,7 +59,7 @@ class GetRam:
     def used_ram(self):
         # Process to get the used RAM
         mem_used = float(self.total_ram()) - float(self.available_ram())
-        mem_used_result = f'{(int(mem_used)):.2f}'
+        mem_used_result = f'{(float(mem_used)):.2f}'
 
         return mem_used_result
 

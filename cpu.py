@@ -51,6 +51,9 @@ def thermal_GetCPUTemp():
             with open(os.path.join(thermal_cpu_directory, array_cpu_dir[i]), 'r') as namefile:
                 temperature = namefile.read()
 
+    if temperature is None:
+        return 'The "temperature" variable in cpu.py is not defined.'
+
     try:
         temperature = int(temperature.strip())/1000
     except AttributeError:
@@ -64,6 +67,7 @@ def hwmon_GetCPUTemp():
     # This will be the directory that holds all CPU temperature information
     # the hwmon path should be the same on every Linux system that uses hwmon
     hwmon_path = '/sys/class/hwmon/'
+    hwmon_cpu_directory = None
 
     # Check if the directory exists
     if (os.path.isdir(hwmon_path)):
@@ -83,7 +87,10 @@ def hwmon_GetCPUTemp():
                         break
             # If there is no file with a normal CPU indicator the program will try to use the '/sys/class/thermal/' directory as a fallback
             except FileNotFoundError:
-                thermal_GetCPUTemp()
+                continue
+
+    if hwmon_cpu_directory is None:
+        return thermal_GetCPUTemp()
 
     # Get all files and directories in the directory that contains all CPU temperature information
     array_cpu_dir = os.listdir(hwmon_cpu_directory)
@@ -119,10 +126,10 @@ def hwmon_GetCPUTemp():
 
 def GetCPUName():
     # Get the position of the start and end of the model name to extract: "Model name: xxxxxxxxxx" where xxxxxxxxxx is the CPU model name
-    MN_position_A = cpu_raw.find('Model name:')
-    MN_position_B = cpu_raw.find('CPU family:')
+    MN_position_A = str(cpu_raw).find('Model name:')
+    MN_position_B = str(cpu_raw).find('CPU family:')
 
-    cpu_model = cpu_raw[MN_position_A+11:MN_position_B]  # String between the two positions 'MN_position_A' and 'MN_position_B'
+    cpu_model = str(cpu_raw)[MN_position_A+11:MN_position_B]  # String between the two positions 'MN_position_A' and 'MN_position_B'
     cpu_model = cpu_model.strip()  # Remove whitespace so we don't get something like '                  xxxxxxxxxx'
 
     return str(cpu_model)
