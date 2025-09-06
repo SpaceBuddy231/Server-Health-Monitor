@@ -7,6 +7,7 @@ import time
 import datetime
 import os
 import json
+import pandas
 
 # Configurating the arguments
 parser = argparse.ArgumentParser(description='SHM - Server Health Monitor for automated information and alert handling.')
@@ -27,9 +28,9 @@ REC_ARG = args.record
 if (type(REC_ARG) is int):
     if not (os.path.isdir('recordings')):  # Checks if the 'recordings' directory already exists, if not it creates one
         os.makedirs('recordings')
-    json_array = []  # Final array that will be inserted into a .json file
+    recordings_data = []  # Final array that will be inserted into a .json + .csv file
 
-    timestamp = datetime.datetime.now().strftime('%m-%d-%Y_%H-%M-%S')  # This timestamp will be used as an filename for the .json file
+    timestamp = datetime.datetime.now().strftime('%m-%d-%Y_%H-%M-%S')  # This timestamp will be used as an filename for the .json + .csv file
 
     for i in range(REC_ARG):  # For-loop that adds every seconds a new entry of every sensor into the 'json_array'
 
@@ -44,17 +45,32 @@ if (type(REC_ARG) is int):
         RamUsed = ram.used_ram()
 
         temp_array = {}
-        temp_array[str(i)] = {  # This 'temp_array' is one entry of every sensor
+        sensor_reading = {  # This 'sensor_reading' is one entry of every sensor
+            'Timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'CPU_Temperature': str(CPUTemp),
             'GPU_Temperature': str(GPUTemp),
             'RAM_Total': str(RamTotal),
             'RAM_Available': str(RamAvailable),
             'RAM_Used': str(RamUsed)
         }
-        json_array.append(temp_array)
+        recordings_data.append(sensor_reading)
         time.sleep(1)  # Every second
-    with open(os.path.join('recordings', timestamp), 'w') as json_file:
-        json.dump(json_array, fp=json_file, indent=2,)  # Saves the 'json_array' into the a freshly created .json file
+
+    file_timestamp = datetime.datetime.now().strftime('%m-%d-%Y_%H-%M-%S')  # file_timestamp (other timestamp than the timestamp in the 'sensor_reading')
+    json_file_path = os.path.join('recordings', file_timestamp + '.json')  # Filepath for the .json file
+    csv_file_path = os.path.join('recordings', file_timestamp + '.csv')  # Filepath for the .csv file
+
+    with open(json_file_path, 'w') as json_file:
+        json.dump(recordings_data, fp=json_file, indent=2,)  # Saves 'recordings_data' into the a freshly created .json file
+
+    #  This DataFrame will be for the .csv saving because the .json formatting is not as readable as the DataFrame
+    df = pandas.DataFrame(recordings_data)
+
+    #  Final step -> Creating a .csv file
+    df.to_csv(csv_file_path, index=False)
+
+    print(f'Saved recording in {json_file_path} and {csv_file_path}.')
+    exit()
 
 
 def output(stdscr: curses.window):
