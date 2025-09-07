@@ -8,6 +8,41 @@ import datetime
 import os
 import json
 import pandas
+import configparser
+
+config = None
+
+
+def read_config():
+    config_filename = 'config.ini'  # Define the filename of the config file
+    config = configparser.ConfigParser()  # First stept of defining the config Object
+
+    if not (os.path.isfile(config_filename)):  # Checks if the config file already exists, if not it creates one with default values
+
+        config['ARGS'] = {
+            'RECORDING_INTERVAL': '1'
+        }
+        config['DISPLAY_INFORMATION'] = {
+            'REFRESH_INTERVAL': '0.3'
+        }
+
+        with open(config_filename, 'w') as configfile:
+            config.write(configfile)
+
+    config.read(config_filename)  # After writing/making sure that the config file exists read the config file
+    return config  # Return the read config
+
+
+config = read_config()  # Reads and saves the config into a 'config' variable
+
+Refresh_Interval = float(config['DISPLAY_INFORMATION']['REFRESH_INTERVAL'])
+Recording_Interval = float(config['ARGS']['RECORDING_INTERVAL'])
+
+
+if (config is None):  # This is a fallback -> If 'config' isn't correctly defined and already a None-Object it exits the program
+    print('The config file could not be read.')
+    exit()
+
 
 # Configurating the arguments
 parser = argparse.ArgumentParser(description='SHM - Server Health Monitor for automated information and alert handling.')
@@ -54,7 +89,7 @@ if (type(REC_ARG) is int):
             'RAM_Used': str(RamUsed)
         }
         recordings_data.append(sensor_reading)
-        time.sleep(1)  # Every second
+        time.sleep(Recording_Interval)  # Every second
 
     file_timestamp = datetime.datetime.now().strftime('%m-%d-%Y_%H-%M-%S')  # file_timestamp (other timestamp than the timestamp in the 'sensor_reading')
     json_file_path = os.path.join('recordings', file_timestamp + '.json')  # Filepath for the .json file
@@ -176,7 +211,7 @@ def output(stdscr: curses.window):
         if key == ord('q'):
             break
 
-        time.sleep(0.3)
+        time.sleep(Refresh_Interval)  # type: ignore
 
 
 curses.wrapper(output)
